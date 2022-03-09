@@ -2,7 +2,7 @@
 """
 Created on Tue Dec 14 16:07:55 2021
 
-Compute the Voronoi polygons for the WRF grid, and save as a geopackage.
+Compute the Voronoi polygons for the WRF grid, and save as a GIS file.
 
 @author: C-H-Simpson
 """
@@ -13,15 +13,13 @@ import shapely
 import numpy as np
 import geopandas as gpd
 
-from datapaths import wrf_NoUrb_path, wrf_voronoi_path
-
 
 def voronoi_finite_polygons_2d(vor, radius=None):
     """
     Reconstruct infinite voronoi regions in a 2D diagram to finite
     regions.
-    
-    Code modified from StackOverflow. 
+
+    Code modified from StackOverflow.
     https://stackoverflow.com/questions/20515554/colorize-voronoi-diagram/20678647#20678647
 
     Parameters
@@ -102,20 +100,24 @@ def voronoi_finite_polygons_2d(vor, radius=None):
 
     return new_regions, np.asarray(new_vertices)
 
-if wrf_voronoi_path.is_file() and __name__ != "__main__":
-    gdf_vor = gpd.read_file(wrf_voronoi_path)
-else:
+
+if __name__ == "__main__":
+    wrf_path = Path("WRF_Urb_T2_20180525-20180831.nc")
+    wrf_voronoi_path = Path("wrf_voronoi")
+
     # Load WRF output, we will only use the coordinates
-    ds_t = xr.open_dataset(wrf_NoUrb_path)
-    
+    ds_t = xr.open_dataset(wrf_path)
+
+    # Assume the latitude and longitude are stored in XLAT and XLONG
     lat_, lon_ = ds_t.XLAT.values.ravel(), ds_t.XLONG.values.ravel()
     x, y = np.meshgrid(ds_t.west_east.values, ds_t.south_north.values)
     points = np.column_stack((lon_, lat_))
-    
-    # compute Voronoi tesselation
+
+    # Compute Voronoi tesselation.
     vor = Voronoi(points)
     regions, vertices = voronoi_finite_polygons_2d(vor)
-    
+
+    # Turn the Voronoi tesselation into a GeoDataFrame.
     boxes = [
         (
             shapely.geometry.Polygon(vertices[g])
@@ -125,12 +127,23 @@ else:
         for g in regions
     ]
     gdf_vor = gpd.GeoDataFrame(
-        {"west_east": x.ravel(), "south_north": y.ravel()}, geometry=boxes, crs="EPSG:4326"
+        {"west_east": x.ravel(), "south_north": y.ravel()},
+        geometry=boxes,
+        crs="EPSG:4326",
     )
     gdf_vor = gdf_vor[
-        gdf_vor.within(shapely.geometry.box(lon_.min(), lat_.min(), lon_.max(), lat_.max()))
+        gdf_vor.within(
+            # Drop the faraway limits of the tesselation.
+            shapely.geometry.box(lon_.min(), lat_.min(), lon_.max(), lat_.max())
+        )
     ]
-    
-    gdf_vor.to_file(wrf_voronoi_path, driver="GPKG")
-    
-    del ds_t
+
+    gdf_vor.to_file(wrf_voronoi_path)
+
+    # You can now easily link data from the xarray object to the geodataframe
+    # with a pandas join.
+    # Here is an example...
+    # Get the mean daily minimum temperature, and make it a pandas dataframe.
+    df_wrf = ds.resample(XTIME="1D").min().mean("XTIME").T2.to_dataframe()
+    # Link it to the geometries.
+    gdf_wrf = gdf_vor.set_index(["west_east", "south_north"]).join(df_wrf)
