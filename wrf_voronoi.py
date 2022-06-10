@@ -10,6 +10,7 @@ Compute the Voronoi polygons for the WRF grid, and save as a GIS file.
 import xarray as xr
 from scipy.spatial import Voronoi
 import shapely
+from pathlib import Path
 import numpy as np
 import geopandas as gpd
 
@@ -100,17 +101,21 @@ def voronoi_finite_polygons_2d(vor, radius=None):
 
     return new_regions, np.asarray(new_vertices)
 
-
-if __name__ == "__main__":
-    wrf_path = Path("WRF_Urb_T2_20180525-20180831.nc")
-    wrf_voronoi_path = Path("wrf_voronoi")
+    # %%
+    # if __name__ == "__main__":
+    wrf_path = Path(
+        f"data/wrf_output_jun2022/WRF_T2_Urb-BC_min_2018-06-01-2018-08-31_London.nc"
+    )
+    wrf_voronoi_path = Path("wrf_voronoi.gpkg")
 
     # Load WRF output, we will only use the coordinates
     ds_t = xr.open_dataset(wrf_path)
+    if "x" in ds_t:
+        ds_t = ds_t.drop(["x", "y"])  # Drop incorrectly assigned x and y
 
-    # Assume the latitude and longitude are stored in XLAT and XLONG
-    lat_, lon_ = ds_t.XLAT.values.ravel(), ds_t.XLONG.values.ravel()
-    x, y = np.meshgrid(ds_t.west_east.values, ds_t.south_north.values)
+    # Assume the latitude and longitude are stored in latitude and longitude
+    lat_, lon_ = ds_t.latitude.values.ravel(), ds_t.longitude.values.ravel()
+    x, y = np.meshgrid(ds_t.x.values, ds_t.y.values)
     points = np.column_stack((lon_, lat_))
 
     # Compute Voronoi tesselation.
@@ -137,7 +142,6 @@ if __name__ == "__main__":
             shapely.geometry.box(lon_.min(), lat_.min(), lon_.max(), lat_.max())
         )
     ]
-
     gdf_vor.to_file(wrf_voronoi_path)
 
     # You can now easily link data from the xarray object to the geodataframe
