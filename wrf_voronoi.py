@@ -101,22 +101,26 @@ def voronoi_finite_polygons_2d(vor, radius=None):
 
     return new_regions, np.asarray(new_vertices)
 
+
 # %%
 if __name__ == "__main__":
     # %%
     wrf_path = Path(
-        f"../data/wrf_output_jun2022/WRF_T2_Urb-BC_min_2018-06-01-2018-08-31_London.nc"
+        # f"../data/wrf_output_jun2022/WRF_T2_Urb-BC_min_2018-06-01-2018-08-31_London.nc"
+        r"brasil\WRF_Urb_T2-V10-U10_20140125-20180210.nc"
     )
-    wrf_voronoi_path = Path("wrf_voronoi.gpkg")
+    wrf_voronoi_path = Path("wrf_voronoi_brasil")
 
+    # %%
     # Load WRF output, we will only use the coordinates
     ds_t = xr.open_dataset(wrf_path)
     if "x" in ds_t:
         ds_t = ds_t.drop(["x", "y"])  # Drop incorrectly assigned x and y
 
+    # %%
     # Assume the latitude and longitude are stored in latitude and longitude
-    lat_, lon_ = ds_t.latitude.values.ravel(), ds_t.longitude.values.ravel()
-    x, y = np.meshgrid(ds_t.x.values, ds_t.y.values)
+    lat_, lon_ = ds_t.XLAT.values.ravel(), ds_t.XLONG.values.ravel()
+    west_east, south_north = np.meshgrid(ds_t.west_east.values, ds_t.south_north.values)
     points = np.column_stack((lon_, lat_))
 
     # Compute Voronoi tesselation.
@@ -133,7 +137,7 @@ if __name__ == "__main__":
         for g in regions
     ]
     gdf_vor = gpd.GeoDataFrame(
-        {"west_east": x.ravel(), "south_north": y.ravel()},
+        {"west_east": west_east.ravel(), "south_north": south_north.ravel()},
         geometry=boxes,
         crs="EPSG:4326",
     )
@@ -143,12 +147,19 @@ if __name__ == "__main__":
             shapely.geometry.box(lon_.min(), lat_.min(), lon_.max(), lat_.max())
         )
     ]
-    gdf_vor.to_file(wrf_voronoi_path)
+    gdf_vor.to_file(wrf_voronoi_path, index=False)
 
+    # %%
+    ds_t.mean("XTIME").to_netcdf("brasil/WRF_time_mean.nc")
+
+    # %%
     # You can now easily link data from the xarray object to the geodataframe
     # with a pandas join.
     # Here is an example...
     # Get the mean daily minimum temperature, and make it a pandas dataframe.
-    df_wrf = ds.resample(XTIME="1D").min().mean("XTIME").T2.to_dataframe()
+    df_wrf = ds_t.resample(XTIME="1D").min().mean("XTIME").T2.to_dataframe()
     # Link it to the geometries.
     gdf_wrf = gdf_vor.set_index(["west_east", "south_north"]).join(df_wrf)
+    gdf_wrf.to_file(
+        str(wrf_voronoi_path) + "_Tm",
+    )
