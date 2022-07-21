@@ -3,3 +3,10 @@ wrf_voronoi.gpkg
 wrf_voronoi.zip
 *.pyc
 *.nc
+*.gpkg
+*.cpg
+*.dbf
+*.shp
+*.prj
+*.shx
+*.zip
