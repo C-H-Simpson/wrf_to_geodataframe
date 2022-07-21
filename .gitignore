@@ -2,3 +2,4 @@
 wrf_voronoi.gpkg
 wrf_voronoi.zip
 *.pyc
+*.nc
