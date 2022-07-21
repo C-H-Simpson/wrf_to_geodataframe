@@ -101,10 +101,11 @@ def voronoi_finite_polygons_2d(vor, radius=None):
 
     return new_regions, np.asarray(new_vertices)
 
+# %%
+if __name__ == "__main__":
     # %%
-    # if __name__ == "__main__":
     wrf_path = Path(
-        f"data/wrf_output_jun2022/WRF_T2_Urb-BC_min_2018-06-01-2018-08-31_London.nc"
+        f"../data/wrf_output_jun2022/WRF_T2_Urb-BC_min_2018-06-01-2018-08-31_London.nc"
     )
     wrf_voronoi_path = Path("wrf_voronoi.gpkg")
 
