@@ -101,22 +101,24 @@ def voronoi_finite_polygons_2d(vor, radius=None):
 
     return new_regions, np.asarray(new_vertices)
 
+
 # %%
 if __name__ == "__main__":
     # %%
     wrf_path = Path(
-        f"../data/wrf_output_jun2022/WRF_T2_Urb-BC_min_2018-06-01-2018-08-31_London.nc"
+        r"..\data\wrf_output_220726\WRF_Urb_BouLac_T2-V10-U10_20180525-20180831.nc"
     )
     wrf_voronoi_path = Path("wrf_voronoi.gpkg")
 
     # Load WRF output, we will only use the coordinates
     ds_t = xr.open_dataset(wrf_path)
+    print(ds_t.coords)
     if "x" in ds_t:
         ds_t = ds_t.drop(["x", "y"])  # Drop incorrectly assigned x and y
 
     # Assume the latitude and longitude are stored in latitude and longitude
-    lat_, lon_ = ds_t.latitude.values.ravel(), ds_t.longitude.values.ravel()
-    x, y = np.meshgrid(ds_t.x.values, ds_t.y.values)
+    lat_, lon_ = ds_t.XLAT.values.ravel(), ds_t.XLONG.values.ravel()
+    x, y = np.meshgrid(ds_t.west_east.values, ds_t.south_north.values)
     points = np.column_stack((lon_, lat_))
 
     # Compute Voronoi tesselation.
@@ -145,6 +147,7 @@ if __name__ == "__main__":
     ]
     gdf_vor.to_file(wrf_voronoi_path)
 
+    # %%
     # You can now easily link data from the xarray object to the geodataframe
     # with a pandas join.
     # Here is an example...
