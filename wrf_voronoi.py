@@ -152,6 +152,38 @@ if __name__ == "__main__":
     # with a pandas join.
     # Here is an example...
     # Get the mean daily minimum temperature, and make it a pandas dataframe.
-    df_wrf = ds.resample(XTIME="1D").min().mean("XTIME").T2.to_dataframe()
+    df_wrf_min = (
+        ds_t.resample(XTIME="1D")
+        .min()
+        .mean("XTIME")
+        .T2.to_dataframe(name="Tmin")[["Tmin"]]
+    )
+    df_wrf_max = (
+        ds_t.resample(XTIME="1D")
+        .min()
+        .mean("XTIME")
+        .T2.to_dataframe(name="Tmax")[["Tmax"]]
+    )
+    df_wrf_mean = (
+        ds_t.resample(XTIME="1D")
+        .min()
+        .mean("XTIME")
+        .T2.to_dataframe(name="Tmean")[["Tmean"]]
+    )
     # Link it to the geometries.
-    gdf_wrf = gdf_vor.set_index(["west_east", "south_north"]).join(df_wrf)
+    gdf_wrf = (
+        gdf_vor.set_index(["west_east", "south_north"])
+        .join(df_wrf_min)
+        .join(df_wrf_max)
+        .join(df_wrf_mean)
+    )
+    gdf_wrf.plot("Tmin")
+
+    gdf_wrf.to_file("london_heat_island_wholeDomain.gpkg", driver="GPKG")
+
+    gdf_london = gpd.read_file(
+        r"C:\Users\ucbqc38\Documents\GIS\statistical-gis-boundaries-london\ESRI\London_Borough_Excluding_MHW.shp"
+    )
+    gdf_wrf[gdf_wrf.intersects(gdf_london.unary_union)].to_file(
+        "london_heat_island.gpkg", driver="GPKG"
+    )

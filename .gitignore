@@ -3,3 +3,16 @@ wrf_voronoi.gpkg
 wrf_voronoi.zip
 *.pyc
 *.nc
+wrf_to_geometry.zip
+london_heat_island_wholeDomain/london_heat_island_wholeDomain.shx
+london_heat_island_wholeDomain/london_heat_island_wholeDomain.shp
+london_heat_island_wholeDomain/london_heat_island_wholeDomain.prj
+london_heat_island_wholeDomain/london_heat_island_wholeDomain.dbf
+london_heat_island_wholeDomain/london_heat_island_wholeDomain.cpg
+london_heat_island_wholeDomain.gpkg
+london_heat_island/london_heat_island.shx
+london_heat_island/london_heat_island.shp
+london_heat_island/london_heat_island.prj
+london_heat_island/london_heat_island.dbf
+london_heat_island/london_heat_island.cpg
+london_heat_island.gpkg
