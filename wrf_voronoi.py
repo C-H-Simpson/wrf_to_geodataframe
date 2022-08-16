@@ -184,6 +184,6 @@ if __name__ == "__main__":
     gdf_london = gpd.read_file(
         r"C:\Users\ucbqc38\Documents\GIS\statistical-gis-boundaries-london\ESRI\London_Borough_Excluding_MHW.shp"
     )
-    gdf_wrf[gdf_wrf.intersects(gdf_london.unary_union)].to_file(
+    gdf_wrf[gdf_wrf.to_crs("EPSG:27700").intersects(gdf_london.unary_union)].to_file(
         "london_heat_island.gpkg", driver="GPKG"
     )
