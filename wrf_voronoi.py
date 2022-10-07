@@ -7,6 +7,7 @@ Compute the Voronoi polygons for the WRF grid, and save as a GIS file.
 @author: C-H-Simpson
 """
 
+# %%
 import xarray as xr
 from scipy.spatial import Voronoi
 import shapely
@@ -160,13 +161,13 @@ if __name__ == "__main__":
     )
     df_wrf_max = (
         ds_t.resample(XTIME="1D")
-        .min()
+        .max()
         .mean("XTIME")
         .T2.to_dataframe(name="Tmax")[["Tmax"]]
     )
     df_wrf_mean = (
         ds_t.resample(XTIME="1D")
-        .min()
+        .mean()
         .mean("XTIME")
         .T2.to_dataframe(name="Tmean")[["Tmean"]]
     )
@@ -187,3 +188,5 @@ if __name__ == "__main__":
     gdf_wrf[gdf_wrf.to_crs("EPSG:27700").intersects(gdf_london.unary_union)].to_file(
         "london_heat_island.gpkg", driver="GPKG"
     )
+
+# %%
