@@ -17,3 +17,8 @@ london_heat_island/london_heat_island.dbf
 london_heat_island/london_heat_island.cpg
 london_heat_island.gpkg
 brasil/
+delphine/delphine.zip
+delphine/regrid.ipynb
+delphine/RegriddingPop.zip
+delphine/RegriddingPop/tas_All_daymax
+delphine/RegriddingPop/WorldPop_AGL_TasDomain
